@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/beowulf-rohan/go-url-shortner/controller"
 	"github.com/beowulf-rohan/go-url-shortner/utils"
@@ -17,7 +16,6 @@ var (
 		"APP_PORT",
 		"DOMAIN",
 		"API_QUOTA",
-		"API_PORT",
 	}
 )
 
@@ -28,13 +26,13 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading configs from env file", err)
 	}
-	log.Println("configs loaded successfully....", config)
+	log.Println("configs loaded successfully....")
 
 	router := gin.Default()
 
 	InitializeRouters(router)
 
-	router.Run(":" + strconv.Itoa(config.ApiPort))
+	log.Fatal(router.Run(":" + config.AppPort))
 
 }
 
@@ -48,7 +46,7 @@ func InitializeRouters(router *gin.Engine) {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	urlGroup := router.Group("url")
+	urlGroup := router.Group("/")
 	{
 		urlGroup.POST("/resolve", controller.Resolve)
 		urlGroup.POST("/shorten", controller.Shorten)

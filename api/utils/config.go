@@ -56,13 +56,6 @@ func LoadEnvVaraibles(envVariableList []string) (*model.Config, error) {
 			} else if config.ApiQuota, err = strconv.Atoi(apiQuota); err != nil {
 				return &model.Config{}, err
 			}
-		case "API_PORT":
-			apiPort := os.Getenv("API_PORT")
-			if apiPort == "" {
-				return &model.Config{}, fmt.Errorf("no env value found for \"API_PORT\" in env file")
-			} else if config.ApiPort, err = strconv.Atoi(apiPort); err != nil {
-				return &model.Config{}, err
-			}
 		}
 	}
 

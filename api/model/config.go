@@ -6,5 +6,4 @@ type Config struct {
 	AppPort  string `json:"app_port"`
 	Domain   string `json:"domain"`
 	ApiQuota int    `json:"api_quota"`
-	ApiPort  int    `json:"api_port"`
 }
