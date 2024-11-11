@@ -16,6 +16,7 @@ func Resolve(c *gin.Context) {
 		c.JSON(code, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	log.Println("Resloved URL:", resolvedURL)
 

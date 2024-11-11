@@ -28,6 +28,8 @@ func Shorten(request *model.Request, ip string) (*model.Response, error, int) {
 	if err == redis.Nil {
 		_ = redisClient.Set(database.Ctx, ip, config.ApiQuota, 30*time.Minute).Err()
 	} else if err != nil {
+		return &model.Response{}, err, 500
+	} else {
 		val, _ := redisClient.Get(database.Ctx, ip).Result()
 		intVal, _ := strconv.Atoi(val)
 		if intVal <= 0 {

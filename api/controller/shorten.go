@@ -17,18 +17,21 @@ func Shorten(c *gin.Context) {
 		c.JSON(400, gin.H{
 			"error": "error while unmarshalling input",
 		})
+		return
 	}
 	log.Println("shorten request receive for URL:", request.URL)
 	if !govalidator.IsURL(request.URL) {
 		c.JSON(400, gin.H{
 			"error": "request URL is not valid",
 		})
+		return
 	}
 
 	if !utils.CheckDomainError(request.URL) {
 		c.JSON(503, gin.H{
 			"error": "domain not valid",
 		})
+		return
 	}
 
 	request.URL = utils.EnforceHttp(request.URL)
@@ -38,6 +41,7 @@ func Shorten(c *gin.Context) {
 		c.JSON(code, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	c.JSON(code, serviceResponse)
