@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/beowulf-rohan/go-url-shortner/controller"
+	"github.com/beowulf-rohan/go-url-shortner/database"
 	"github.com/beowulf-rohan/go-url-shortner/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -28,6 +29,9 @@ func main() {
 	}
 	log.Println("configs loaded successfully....")
 
+	utils.Init(config)
+	database.Init(config)
+
 	router := gin.Default()
 
 	InitializeRouters(router)
@@ -46,10 +50,7 @@ func InitializeRouters(router *gin.Engine) {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	urlGroup := router.Group("/")
-	{
-		urlGroup.POST("/resolve", controller.Resolve)
-		urlGroup.POST("/shorten", controller.Shorten)
-	}
+	router.GET("/:url", controller.Resolve)
+	router.POST("/api/v1", controller.Shorten)
 
 }
