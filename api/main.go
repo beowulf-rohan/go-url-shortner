@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/beowulf-rohan/go-url-shortner/controller"
 	"github.com/beowulf-rohan/go-url-shortner/utils"
@@ -30,10 +31,10 @@ func main() {
 	log.Println("configs loaded successfully....", config)
 
 	router := gin.Default()
-	
+
 	InitializeRouters(router)
 
-	router.Run(":8080")
+	router.Run(":" + strconv.Itoa(config.ApiPort))
 
 }
 
