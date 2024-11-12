@@ -11,7 +11,7 @@ import (
 )
 
 func Shorten(c *gin.Context) {
-	request := new(model.Request)
+	request := model.Request{}
 
 	if err := c.BindJSON(&request); err != nil {
 		c.JSON(400, gin.H{

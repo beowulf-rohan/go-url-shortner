@@ -3,7 +3,9 @@ package services
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -20,17 +22,17 @@ func Init(configurations *model.Config) {
 	config = configurations
 }
 
-func Shorten(request *model.Request, ip string) (*model.Response, error, int) {
+func Shorten(request model.Request, ip string) (*model.Response, error, int) {
 	redisClient := database.CreareRedisClient(1)
 	defer redisClient.Close()
 
-	_, err := redisClient.Get(database.Ctx, ip).Result()
+	val, err := redisClient.Get(database.Ctx, ip).Result()
 	if err == redis.Nil {
-		_ = redisClient.Set(database.Ctx, ip, config.ApiQuota, 30*time.Minute).Err()
-	} else if err != nil {
-		return &model.Response{}, err, 500
+		err = redisClient.Set(database.Ctx, ip, config.ApiQuota, 30*60*time.Second).Err()
+		if err != nil {
+			return &model.Response{}, err, 500
+		}
 	} else {
-		val, _ := redisClient.Get(database.Ctx, ip).Result()
 		intVal, _ := strconv.Atoi(val)
 		if intVal <= 0 {
 			limit, _ := redisClient.TTL(database.Ctx, ip).Result()
@@ -48,7 +50,7 @@ func Shorten(request *model.Request, ip string) (*model.Response, error, int) {
 	redisClient2 := database.CreareRedisClient(0)
 	defer redisClient2.Close()
 
-	val, _ := redisClient2.Get(database.Ctx, shortId).Result()
+	val, _ = redisClient2.Get(database.Ctx, shortId).Result()
 	if val != "" {
 		return &model.Response{}, fmt.Errorf("shortened url already in use"), 403
 	}
@@ -57,10 +59,16 @@ func Shorten(request *model.Request, ip string) (*model.Response, error, int) {
 		request.Expiry = 30
 	}
 
-	err = redisClient2.Set(database.Ctx, shortId, request, request.Expiry*time.Hour).Err()
+	log.Printf("error check here....%+v", request)
+	jsonData, err := json.Marshal(request.ShortenedURL)
+	if err != nil {
+		return &model.Response{}, fmt.Errorf("failed to serialize request: %v", err), 500
+	}
+	err = redisClient2.Set(database.Ctx, shortId, jsonData, request.Expiry*time.Hour).Err()
 	if err != nil {
 		return &model.Response{}, err, 500
 	}
+	log.Println("error check pass.....")
 
 	response := model.Response{
 		URL:            request.URL,

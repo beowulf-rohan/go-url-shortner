@@ -36,9 +36,9 @@ func LoadEnvVaraibles(envVariableList []string) (*model.Config, error) {
 			}
 		case "DB_PASS":
 			config.DbPass = os.Getenv("DB_PASS")
-			if config.DbPass == "" {
-				return &model.Config{}, fmt.Errorf("no env value found for \"DB_PASS\" in env file")
-			}
+			// if config.DbPass == "" {
+			// 	return &model.Config{}, fmt.Errorf("no env value found for \"DB_PASS\" in env file")
+			// }
 		case "APP_PORT":
 			config.AppPort = os.Getenv("APP_PORT")
 			if config.AppPort == "" {

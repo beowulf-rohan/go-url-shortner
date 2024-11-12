@@ -5,6 +5,7 @@ import (
 
 	"github.com/beowulf-rohan/go-url-shortner/controller"
 	"github.com/beowulf-rohan/go-url-shortner/database"
+	"github.com/beowulf-rohan/go-url-shortner/services"
 	"github.com/beowulf-rohan/go-url-shortner/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -31,6 +32,7 @@ func main() {
 
 	utils.Init(config)
 	database.Init(config)
+	services.Init(config)
 
 	router := gin.Default()
 
