@@ -1,7 +1,6 @@
 package elasticsearch
 
 import (
-	"context"
 	"crypto/tls"
 	"log"
 	"net"
@@ -41,7 +40,6 @@ func GetElasticClient(url, index, username, password string) (*elasticsearch.Cli
 		log.Println("info error for elastic:", err)
 		return &elasticsearch.Client{}, err
 	}
-	
-	log.Println("elastic client created")
+
 	return es, nil
 }
