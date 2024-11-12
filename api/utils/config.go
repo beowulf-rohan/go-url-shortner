@@ -36,9 +36,9 @@ func LoadEnvVaraibles(envVariableList []string) (*model.Config, error) {
 			}
 		case "DB_PASS":
 			config.DbPass = os.Getenv("DB_PASS")
-			// if config.DbPass == "" {
-			// 	return &model.Config{}, fmt.Errorf("no env value found for \"DB_PASS\" in env file")
-			// }
+			if config.DbPass == "" {
+				return &model.Config{}, fmt.Errorf("no env value found for \"DB_PASS\" in env file")
+			}
 		case "APP_PORT":
 			config.AppPort = os.Getenv("APP_PORT")
 			if config.AppPort == "" {
@@ -55,6 +55,21 @@ func LoadEnvVaraibles(envVariableList []string) (*model.Config, error) {
 				return &model.Config{}, fmt.Errorf("no env value found for \"API_QUOTA\" in env file")
 			} else if config.ApiQuota, err = strconv.Atoi(apiQuota); err != nil {
 				return &model.Config{}, err
+			}
+		case "ES_ENDPOINT":
+			config.ElasticEndpoint = os.Getenv("ES_ENDPOINT")
+			if config.ElasticEndpoint == "" {
+				return &model.Config{}, fmt.Errorf("no env value found for \"ES_ENDPOINT\" in env file")
+			}
+		case "ES_PASSWORD":
+			config.ElasticPassword = os.Getenv("ES_PASSWORD")
+			if config.ElasticPassword == "" {
+				return &model.Config{}, fmt.Errorf("no env value found for \"ES_PASSWORD\" in env file")
+			}
+		case "URL_METADATA_ES_INDEX":
+			config.UrlMetadataIndex = os.Getenv("URL_METADATA_ES_INDEX")
+			if config.UrlMetadataIndex == "" {
+				return &model.Config{}, fmt.Errorf("no env value found for \"URL_METADATA_ES_INDEX\" in env file")
 			}
 		}
 	}

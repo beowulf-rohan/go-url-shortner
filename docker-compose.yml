@@ -13,3 +13,21 @@ services:
       - "6379:6379"
     volumes:
       - .data:/data
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+    container_name: elasticsearch
+    environment:
+      - node.name=es01
+      - discovery.type=single-node
+      - xpack.security.enabled=true             # Enable security
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}    # Password for the default "elastic" superuser
+      - xpack.security.http.ssl.enabled=false   # Optional: disable SSL in local dev
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+volumes:
+  es_data:
+    driver: local
