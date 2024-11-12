@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/beowulf-rohan/go-url-shortner/controller"
-	"github.com/beowulf-rohan/go-url-shortner/database"
-	"github.com/beowulf-rohan/go-url-shortner/services"
+	"github.com/beowulf-rohan/go-url-shortner/api/controller"
+	"github.com/beowulf-rohan/go-url-shortner/api/services"
+	database "github.com/beowulf-rohan/go-url-shortner/redis"
 	"github.com/beowulf-rohan/go-url-shortner/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"

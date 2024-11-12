@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/beowulf-rohan/go-url-shortner/api/services"
 	"github.com/beowulf-rohan/go-url-shortner/model"
-	"github.com/beowulf-rohan/go-url-shortner/services"
 	"github.com/beowulf-rohan/go-url-shortner/utils"
 	"github.com/gin-gonic/gin"
 )

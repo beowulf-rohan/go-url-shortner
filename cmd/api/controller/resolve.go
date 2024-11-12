@@ -3,7 +3,7 @@ package controller
 import (
 	"log"
 
-	"github.com/beowulf-rohan/go-url-shortner/services"
+	"github.com/beowulf-rohan/go-url-shortner/api/services"
 	gin "github.com/gin-gonic/gin"
 )
 

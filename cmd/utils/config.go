@@ -61,6 +61,11 @@ func LoadEnvVaraibles(envVariableList []string) (*model.Config, error) {
 			if config.ElasticEndpoint == "" {
 				return &model.Config{}, fmt.Errorf("no env value found for \"ES_ENDPOINT\" in env file")
 			}
+		case "ES_USERNAME":
+			config.ElasticUsername = os.Getenv("ES_USERNAME")
+			if config.ElasticUsername == "" {
+				return &model.Config{}, fmt.Errorf("no env value found for \"ES_USERNAME\" in env file")
+			}
 		case "ES_PASSWORD":
 			config.ElasticPassword = os.Getenv("ES_PASSWORD")
 			if config.ElasticPassword == "" {

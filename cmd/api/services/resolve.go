@@ -1,10 +1,10 @@
 package services
 
 import (
-	"github.com/beowulf-rohan/go-url-shortner/database"
+	database "github.com/beowulf-rohan/go-url-shortner/redis"
+
 	"github.com/go-redis/redis/v8"
 )
-
 
 func Resolve(url string) (string, error, int) {
 	redisClient := database.CreareRedisClient(0)

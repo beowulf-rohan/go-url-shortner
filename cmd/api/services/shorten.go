@@ -9,7 +9,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/beowulf-rohan/go-url-shortner/database"
+	redisDB "github.com/beowulf-rohan/go-url-shortner/redis"
+
 	"github.com/beowulf-rohan/go-url-shortner/model"
 	"github.com/go-redis/redis/v8"
 )
@@ -23,19 +24,19 @@ func Init(configurations *model.Config) {
 }
 
 func Shorten(request model.Request, ip string) (*model.Response, error, int) {
-	redisClient := database.CreareRedisClient(1)
+	redisClient := redisDB.CreareRedisClient(1)
 	defer redisClient.Close()
 
-	val, err := redisClient.Get(database.Ctx, ip).Result()
+	val, err := redisClient.Get(redisDB.Ctx, ip).Result()
 	if err == redis.Nil {
-		err = redisClient.Set(database.Ctx, ip, config.ApiQuota, 30*60*time.Second).Err()
+		err = redisClient.Set(redisDB.Ctx, ip, config.ApiQuota, 30*60*time.Second).Err()
 		if err != nil {
 			return &model.Response{}, err, 500
 		}
 	} else {
 		intVal, _ := strconv.Atoi(val)
 		if intVal <= 0 {
-			limit, _ := redisClient.TTL(database.Ctx, ip).Result()
+			limit, _ := redisClient.TTL(redisDB.Ctx, ip).Result()
 			return &model.Response{}, fmt.Errorf("rate limit exceeded, rateLimit resets in: %+v", limit/time.Nanosecond/time.Minute), 429
 		}
 	}
@@ -47,10 +48,10 @@ func Shorten(request model.Request, ip string) (*model.Response, error, int) {
 		shortId = request.ShortenedURL
 	}
 
-	redisClient2 := database.CreareRedisClient(0)
+	redisClient2 := redisDB.CreareRedisClient(0)
 	defer redisClient2.Close()
 
-	val, _ = redisClient2.Get(database.Ctx, shortId).Result()
+	val, _ = redisClient2.Get(redisDB.Ctx, shortId).Result()
 	if val != "" {
 		return &model.Response{}, fmt.Errorf("shortened url already in use"), 403
 	}
@@ -64,7 +65,7 @@ func Shorten(request model.Request, ip string) (*model.Response, error, int) {
 	if err != nil {
 		return &model.Response{}, fmt.Errorf("failed to serialize request: %v", err), 500
 	}
-	err = redisClient2.Set(database.Ctx, shortId, jsonData, request.Expiry*time.Hour).Err()
+	err = redisClient2.Set(redisDB.Ctx, shortId, jsonData, request.Expiry*time.Hour).Err()
 	if err != nil {
 		return &model.Response{}, err, 500
 	}
@@ -78,12 +79,12 @@ func Shorten(request model.Request, ip string) (*model.Response, error, int) {
 		RateLimitReset: 30,
 	}
 
-	redisClient.Decr(database.Ctx, ip)
+	redisClient.Decr(redisDB.Ctx, ip)
 
-	val, _ = redisClient2.Get(database.Ctx, ip).Result()
+	val, _ = redisClient2.Get(redisDB.Ctx, ip).Result()
 	response.RateRemaining, _ = strconv.Atoi(val)
 
-	ttl, _ := redisClient2.TTL(database.Ctx, ip).Result()
+	ttl, _ := redisClient2.TTL(redisDB.Ctx, ip).Result()
 	response.RateLimitReset = ttl / time.Nanosecond / time.Minute
 
 	response.ShortenedURL = config.Domain + "/" + shortId
