@@ -1,7 +1,6 @@
 package elasticsearch
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -31,15 +30,15 @@ func GetElasticClient() (*ElasticClient, error) {
 		Addresses: []string{
 			config.ElasticEndpoint,
 		},
-		Username: config.ElasticUsername,
-		Password: config.ElasticPassword,
+		// Username: config.ElasticUsername,
+		// Password: config.ElasticPassword,
 		Transport: &http.Transport{
 			MaxIdleConnsPerHost:   10,
 			ResponseHeaderTimeout: 360 * time.Second,
 			DialContext:           (&net.Dialer{Timeout: 10 * time.Second}).DialContext,
-			TLSClientConfig: &tls.Config{
-				MinVersion: tls.VersionTLS13,
-			},
+			// TLSClientConfig: &tls.Config{
+			// 	MinVersion: tls.VersionTLS13,
+			// },
 		},
 	}
 
@@ -59,7 +58,7 @@ func GetElasticClient() (*ElasticClient, error) {
 }
 
 func (ec *ElasticClient) CreateIndex(indexName string) error {
-	exists, err := ec.IsIndexExist(indexName)
+	exists, err := ec.CheckIfIndexExists(indexName)
 	if err != nil {
 		log.Println("error checking if index exists:", err)
 		return err
@@ -70,10 +69,10 @@ func (ec *ElasticClient) CreateIndex(indexName string) error {
 		return nil
 	}
 
+	log.Printf("creating %s index.....", indexName)
 	mapping := getIndexMapping(indexName)
 
 	reqBody := strings.NewReader(mapping)
-	// res, err := es.Indices.Create(indexName)
 	res, err := ec.Client.Indices.Create(indexName, ec.Client.Indices.Create.WithBody(reqBody))
 	if err != nil {
 		log.Println("error creating elastic index:", err)
@@ -89,19 +88,17 @@ func (ec *ElasticClient) CreateIndex(indexName string) error {
 		}
 		return fmt.Errorf("failed to create index. error code: %d, response body: %v", res.StatusCode, res.Body)
 	}
+	log.Printf("created %s index sucessfully...", indexName)
 	return nil
 }
 
-func (ec *ElasticClient) IsIndexExist(indexName string) (bool, error) {
+func (ec *ElasticClient) CheckIfIndexExists(indexName string) (bool, error) {
 	res, err := ec.Client.Indices.Exists([]string{indexName})
 	if err != nil {
 		return false, fmt.Errorf("error checking index existence: %v", err)
 	}
 	defer res.Body.Close()
 
-	if res.IsError() {
-		return false, fmt.Errorf("failed to check index. error code: %d, response body: %v", res.StatusCode, res.Body)
-	}
-
-	return true, nil
+	exists := res.StatusCode == 200
+	return exists, nil
 }

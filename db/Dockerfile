@@ -1,5 +1,5 @@
-FROM redis:alpine
-EXPOSE 6379
+# FROM redis:alpine
+# EXPOSE 6379
 
 
 FROM docker.elastic.co/elasticsearch/elasticsearch:8.10.0
