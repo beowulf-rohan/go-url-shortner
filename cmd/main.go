@@ -5,6 +5,8 @@ import (
 
 	"github.com/beowulf-rohan/go-url-shortner/api/controller"
 	"github.com/beowulf-rohan/go-url-shortner/api/services"
+	"github.com/beowulf-rohan/go-url-shortner/elasticsearch"
+	"github.com/beowulf-rohan/go-url-shortner/model"
 	database "github.com/beowulf-rohan/go-url-shortner/redis"
 	"github.com/beowulf-rohan/go-url-shortner/utils"
 	"github.com/gin-contrib/cors"
@@ -18,6 +20,10 @@ var (
 		"APP_PORT",
 		"DOMAIN",
 		"API_QUOTA",
+		"ES_ENDPOINT",
+		"ES_USERNAME",
+		"ES_PASSWORD",
+		"URL_METADATA_ES_INDEX",
 	}
 )
 
@@ -33,10 +39,11 @@ func main() {
 	utils.Init(config)
 	database.Init(config)
 	services.Init(config)
+	elasticsearch.Init(config)
 
 	router := gin.Default()
-
 	InitializeRouters(router)
+	InitializeElasticSerch(config)
 
 	log.Fatal(router.Run(":" + config.AppPort))
 
@@ -54,5 +61,15 @@ func InitializeRouters(router *gin.Engine) {
 
 	router.GET("/:url", controller.Resolve)
 	router.POST("/api/v1", controller.Shorten)
+
+}
+
+func InitializeElasticSerch(config *model.Config) {
+	ElasticClient, err := elasticsearch.GetElasticClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ElasticClient.CreateIndex(config.UrlMetadataIndex)
+	// TODO: add more indices here.
 
 }
