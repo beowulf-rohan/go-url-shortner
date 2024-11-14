@@ -6,15 +6,15 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-func Resolve(url string) (string, error, int) {
+func Resolve(url string) (string, int, error) {
 	redisClient := database.CreareRedisClient(0)
 	defer redisClient.Close()
 
 	value, err := redisClient.Get(database.Ctx, url).Result()
 	if err == redis.Nil {
-		return "", err, 404
+		return "", 404, err
 	} else if err != nil {
-		return "", err, 500
+		return "", 500, err
 	}
 
 	rInr := database.CreareRedisClient(1)
@@ -22,5 +22,5 @@ func Resolve(url string) (string, error, int) {
 
 	_ = rInr.Incr(database.Ctx, "counter")
 
-	return value, nil, 200
+	return value, 200, nil
 }

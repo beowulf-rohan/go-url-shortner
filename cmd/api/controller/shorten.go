@@ -36,7 +36,7 @@ func Shorten(c *gin.Context) {
 
 	request.URL = utils.EnforceHttp(request.URL)
 
-	serviceResponse, err, code := services.Shorten(request, c.ClientIP())
+	shortenedURLResponse, code, err := services.Shorten(&request, c.ClientIP())
 	if err != nil {
 		c.JSON(code, gin.H{
 			"error": err.Error(),
@@ -44,5 +44,5 @@ func Shorten(c *gin.Context) {
 		return
 	}
 
-	c.JSON(code, serviceResponse)
+	c.JSON(code, shortenedURLResponse)
 }

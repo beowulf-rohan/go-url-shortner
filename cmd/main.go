@@ -65,11 +65,11 @@ func InitializeRouters(router *gin.Engine) {
 }
 
 func InitializeElasticSerch(config *model.Config) {
-	ElasticClient, err := elasticsearch.GetElasticClient()
+	ElasticClient, err := elasticsearch.GetElasticClient(config.UrlMetadataIndex)
 	if err != nil {
 		log.Fatal(err)
 	}
-	ElasticClient.CreateIndex(config.UrlMetadataIndex)
+	ElasticClient.CreateIndex()
 	// TODO: add more indices here.
 
 }

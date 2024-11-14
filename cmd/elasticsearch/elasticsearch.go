@@ -1,6 +1,8 @@
 package elasticsearch
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,6 +13,7 @@ import (
 
 	"github.com/beowulf-rohan/go-url-shortner/model"
 	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/google/uuid"
 )
 
 var (
@@ -23,9 +26,11 @@ func Init(configurations *model.Config) {
 
 type ElasticClient struct {
 	Client *elasticsearch.Client
+	Index  string
+	Ctx    context.Context
 }
 
-func GetElasticClient() (*ElasticClient, error) {
+func GetElasticClient(index string) (*ElasticClient, error) {
 	cfg := elasticsearch.Config{
 		Addresses: []string{
 			config.ElasticEndpoint,
@@ -54,26 +59,41 @@ func GetElasticClient() (*ElasticClient, error) {
 		return nil, err
 	}
 
-	return &ElasticClient{Client: es}, nil
+	return &ElasticClient{
+		Client: es,
+		Index:  index,
+		Ctx:    context.Background(),
+	}, nil
 }
 
-func (ec *ElasticClient) CreateIndex(indexName string) error {
-	exists, err := ec.CheckIfIndexExists(indexName)
+func (ec *ElasticClient) CheckIfIndexExists(indexName string) (bool, error) {
+	res, err := ec.Client.Indices.Exists([]string{indexName})
+	if err != nil {
+		return false, fmt.Errorf("error checking index existence: %v", err)
+	}
+	defer res.Body.Close()
+
+	exists := res.StatusCode == 200
+	return exists, nil
+}
+
+func (ec *ElasticClient) CreateIndex() error {
+	exists, err := ec.CheckIfIndexExists(ec.Index)
 	if err != nil {
 		log.Println("error checking if index exists:", err)
 		return err
 	}
 
 	if exists {
-		log.Println("Index already exists:", indexName)
+		log.Println("Index already exists:", ec.Index)
 		return nil
 	}
 
-	log.Printf("creating %s index.....", indexName)
-	mapping := getIndexMapping(indexName)
+	log.Printf("creating %s index.....", ec.Index)
+	mapping := getIndexMapping(ec.Index)
 
 	reqBody := strings.NewReader(mapping)
-	res, err := ec.Client.Indices.Create(indexName, ec.Client.Indices.Create.WithBody(reqBody))
+	res, err := ec.Client.Indices.Create(ec.Index, ec.Client.Indices.Create.WithBody(reqBody))
 	if err != nil {
 		log.Println("error creating elastic index:", err)
 		return err
@@ -88,17 +108,87 @@ func (ec *ElasticClient) CreateIndex(indexName string) error {
 		}
 		return fmt.Errorf("failed to create index. error code: %d, response body: %v", res.StatusCode, res.Body)
 	}
-	log.Printf("created %s index sucessfully...", indexName)
+	log.Printf("created %s index sucessfully...", ec.Index)
 	return nil
 }
 
-func (ec *ElasticClient) CheckIfIndexExists(indexName string) (bool, error) {
-	res, err := ec.Client.Indices.Exists([]string{indexName})
+func (ec *ElasticClient) DeleteIndex() error {
+	log.Printf("deleting %s index.....", ec.Index)
+	res, err := ec.Client.Indices.Delete([]string{ec.Index}, ec.Client.Indices.Delete.WithContext(context.Background()))
 	if err != nil {
-		return false, fmt.Errorf("error checking index existence: %v", err)
+		log.Println("error deleting elastic index:", err)
+		return err
+	}
+	defer res.Body.Close()
+	log.Printf("deleted %s index sucessfully...", ec.Index)
+	return nil
+}
+
+func (ec *ElasticClient) PushToElastic(doc interface{}, docID string) error {
+	data, err := json.Marshal(doc)
+	if err != nil {
+		return fmt.Errorf("error marshalling document to JSON: %w", err)
+	}
+
+	if docID == "" {
+		docID = uuid.New().String()
+	}
+
+	req := bytes.NewReader(data)
+	res, err := ec.Client.Index(
+		ec.Index,
+		req,
+		ec.Client.Index.WithDocumentID(docID),
+		ec.Client.Index.WithContext(context.Background()),
+		ec.Client.Index.WithRefresh("true"),
+	)
+	if err != nil {
+		return fmt.Errorf("error indexing document to Elasticsearch: %w", err)
 	}
 	defer res.Body.Close()
 
-	exists := res.StatusCode == 200
-	return exists, nil
+	if res.IsError() {
+		var errMsg map[string]interface{}
+		if err := json.NewDecoder(res.Body).Decode(&errMsg); err != nil {
+			return fmt.Errorf("error parsing Elasticsearch response: %w", err)
+		}
+		return fmt.Errorf("elasticsearch indexing error: %v", errMsg)
+	}
+
+	log.Printf("Document with ID '%s' indexed successfully in index '%s'", docID, ec.Index)
+	return nil
+}
+
+func (ec *ElasticClient) GetFromElastic(docID string) (*model.Response, error) {
+    res, err := ec.Client.Get(
+        ec.Index,
+        docID,
+        ec.Client.Get.WithContext(context.Background()),
+    )
+    if err != nil {
+        return nil, fmt.Errorf("error retrieving document from Elasticsearch: %w", err)
+    }
+    defer res.Body.Close()
+
+    if res.StatusCode == 404 {
+        return nil, fmt.Errorf("document with ID '%s' not found in index '%s'", docID, ec.Index)
+    }
+
+    if res.IsError() {
+        var errMsg map[string]interface{}
+        if err := json.NewDecoder(res.Body).Decode(&errMsg); err != nil {
+            return nil, fmt.Errorf("error parsing Elasticsearch response: %w", err)
+        }
+        return nil, fmt.Errorf("elasticsearch retrieval error: %v", errMsg)
+    }
+
+    var doc struct {
+        Source model.Response `json:"_source"`
+    }
+    if err := json.NewDecoder(res.Body).Decode(&doc); err != nil {
+        return nil, fmt.Errorf("error decoding document data: %w", err)
+    }
+
+    log.Printf("Document with ID '%s' retrieved successfully from index '%s'", docID, ec.Index)
+    return &doc.Source, nil
 }
