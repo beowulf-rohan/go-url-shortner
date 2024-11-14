@@ -120,7 +120,6 @@ func (ec *ElasticClient) DeleteIndex() error {
 }
 
 func (ec *ElasticClient) PushToElastic(doc interface{}, docID string) error {
-	log.Printf("Indexing document with ID '%s': %+v", docID, doc)
 
 	var bulkBody bytes.Buffer
 	jsonDoc, err := json.Marshal(doc)
@@ -150,15 +149,14 @@ func (ec *ElasticClient) PushToElastic(doc interface{}, docID string) error {
 		return fmt.Errorf("elasticsearch indexing error: %v", errMsg)
 	}
 
-	log.Printf("Document with ID '%s' indexed successfully in index '%s'", docID, ec.Index)
 	return nil
 }
 
 func (ec *ElasticClient) GetFromElastic(docID string) (*model.Response, error) {
 	query := fmt.Sprintf(`{
 		"query": {
-			"match": {
-				"url": "%s"
+			"term": {
+				"url.keyword": "%s"
 			}
 		}
 	}`, docID)
