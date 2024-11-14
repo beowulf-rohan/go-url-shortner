@@ -11,18 +11,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beowulf-rohan/go-url-shortner/config"
 	"github.com/beowulf-rohan/go-url-shortner/model"
+	"github.com/elastic/go-elasticsearch/esapi"
 	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/google/uuid"
 )
-
-var (
-	config *model.Config
-)
-
-func Init(configurations *model.Config) {
-	config = configurations
-}
 
 type ElasticClient struct {
 	Client *elasticsearch.Client
@@ -31,6 +24,8 @@ type ElasticClient struct {
 }
 
 func GetElasticClient(index string) (*ElasticClient, error) {
+	config := config.GlobalConfig
+
 	cfg := elasticsearch.Config{
 		Addresses: []string{
 			config.ElasticEndpoint,
@@ -125,23 +120,23 @@ func (ec *ElasticClient) DeleteIndex() error {
 }
 
 func (ec *ElasticClient) PushToElastic(doc interface{}, docID string) error {
-	data, err := json.Marshal(doc)
+	log.Printf("Indexing document with ID '%s': %+v", docID, doc)
+
+	var bulkBody bytes.Buffer
+	jsonDoc, err := json.Marshal(doc)
 	if err != nil {
 		return fmt.Errorf("error marshalling document to JSON: %w", err)
 	}
+	indexLine := fmt.Sprintf(`{ "index" : { "_index" : "%s", "_id": "%s"} } %s`, ec.Index, docID, "\n")
+	bulkBody.WriteString(indexLine)
+	bulkBody.Write(jsonDoc)
+	bulkBody.WriteString("\n")
 
-	if docID == "" {
-		docID = uuid.New().String()
+	req := esapi.BulkRequest{
+		Body:    strings.NewReader(bulkBody.String()),
+		Refresh: "true",
 	}
-
-	req := bytes.NewReader(data)
-	res, err := ec.Client.Index(
-		ec.Index,
-		req,
-		ec.Client.Index.WithDocumentID(docID),
-		ec.Client.Index.WithContext(context.Background()),
-		ec.Client.Index.WithRefresh("true"),
-	)
+	res, err := req.Do(ec.Ctx, ec.Client)
 	if err != nil {
 		return fmt.Errorf("error indexing document to Elasticsearch: %w", err)
 	}
@@ -160,35 +155,91 @@ func (ec *ElasticClient) PushToElastic(doc interface{}, docID string) error {
 }
 
 func (ec *ElasticClient) GetFromElastic(docID string) (*model.Response, error) {
-    res, err := ec.Client.Get(
-        ec.Index,
-        docID,
-        ec.Client.Get.WithContext(context.Background()),
-    )
-    if err != nil {
-        return nil, fmt.Errorf("error retrieving document from Elasticsearch: %w", err)
-    }
-    defer res.Body.Close()
+	query := fmt.Sprintf(`{
+		"query": {
+			"match": {
+				"url": "%s"
+			}
+		}
+	}`, docID)
 
-    if res.StatusCode == 404 {
-        return nil, fmt.Errorf("document with ID '%s' not found in index '%s'", docID, ec.Index)
-    }
+	res, err := ec.Client.Search(
+		ec.Client.Search.WithIndex(ec.Index),
+		ec.Client.Search.WithBody(strings.NewReader(query)),
+		ec.Client.Search.WithContext(context.Background()),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error searching document in Elasticsearch: %w", err)
+	}
+	defer res.Body.Close()
 
-    if res.IsError() {
-        var errMsg map[string]interface{}
-        if err := json.NewDecoder(res.Body).Decode(&errMsg); err != nil {
-            return nil, fmt.Errorf("error parsing Elasticsearch response: %w", err)
-        }
-        return nil, fmt.Errorf("elasticsearch retrieval error: %v", errMsg)
-    }
+	if res.IsError() {
+		var errMsg map[string]interface{}
+		if err := json.NewDecoder(res.Body).Decode(&errMsg); err != nil {
+			return nil, fmt.Errorf("error parsing Elasticsearch response: %w", err)
+		}
+		return nil, fmt.Errorf("elasticsearch retrieval error: %v", errMsg)
+	}
 
-    var doc struct {
-        Source model.Response `json:"_source"`
-    }
-    if err := json.NewDecoder(res.Body).Decode(&doc); err != nil {
-        return nil, fmt.Errorf("error decoding document data: %w", err)
-    }
+	var searchResult struct {
+		Hits struct {
+			Hits []struct {
+				Source model.Response `json:"_source"`
+			} `json:"hits"`
+		} `json:"hits"`
+	}
 
-    log.Printf("Document with ID '%s' retrieved successfully from index '%s'", docID, ec.Index)
-    return &doc.Source, nil
+	if err := json.NewDecoder(res.Body).Decode(&searchResult); err != nil {
+		return nil, fmt.Errorf("error decoding search result: %w", err)
+	}
+
+	if len(searchResult.Hits.Hits) == 0 {
+		return nil, fmt.Errorf("document with URL '%s' not found in index '%s'", docID, ec.Index)
+	}
+
+	return &searchResult.Hits.Hits[0].Source, nil
+}
+
+func (ec *ElasticClient) GetAllFromElastic() error {
+	log.Println("fetching all documents")
+	searchRequest := esapi.SearchRequest{
+		Index: []string{ec.Index},
+		Body:  strings.NewReader(`{"query": {"match_all": {}}}`),
+	}
+
+	res, err := searchRequest.Do(context.Background(), ec.Client)
+	if err != nil {
+		return fmt.Errorf("error searching documents in Elasticsearch: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		var errMsg map[string]interface{}
+		if err := json.NewDecoder(res.Body).Decode(&errMsg); err != nil {
+			return fmt.Errorf("error parsing Elasticsearch response: %w", err)
+		}
+		return fmt.Errorf("elasticsearch search error: %v", errMsg)
+	}
+
+	var searchResult struct {
+		Hits struct {
+			Hits []struct {
+				Source model.Response `json:"_source"`
+			} `json:"hits"`
+		} `json:"hits"`
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&searchResult); err != nil {
+		return fmt.Errorf("error decoding search result: %w", err)
+	}
+
+	if len(searchResult.Hits.Hits) > 0 {
+		for _, hit := range searchResult.Hits.Hits {
+			log.Printf("Found document: %+v", hit.Source)
+		}
+	} else {
+		log.Println("No documents found.")
+	}
+
+	return nil
 }

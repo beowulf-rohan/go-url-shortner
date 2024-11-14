@@ -3,22 +3,15 @@ package utils
 import (
 	"strings"
 
-	"github.com/beowulf-rohan/go-url-shortner/model"
+	"github.com/beowulf-rohan/go-url-shortner/config"
 )
-
-var (
-	config *model.Config
-)
-
-func Init(configurations *model.Config) {
-	config = configurations
-}
 
 func CheckDomainError(url string) bool {
+	config := config.GlobalConfig
 	if url == config.Domain {
 		return false
 	}
-	
+
 	url = strings.Replace(url, "http://", "", 1)
 	url = strings.Replace(url, "https://", "", 1)
 	url = strings.Replace(url, "www.", "", 1)

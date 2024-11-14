@@ -4,11 +4,8 @@ import (
 	"log"
 
 	"github.com/beowulf-rohan/go-url-shortner/api/controller"
-	"github.com/beowulf-rohan/go-url-shortner/api/services"
+	"github.com/beowulf-rohan/go-url-shortner/config"
 	"github.com/beowulf-rohan/go-url-shortner/elasticsearch"
-	"github.com/beowulf-rohan/go-url-shortner/model"
-	database "github.com/beowulf-rohan/go-url-shortner/redis"
-	"github.com/beowulf-rohan/go-url-shortner/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -30,22 +27,17 @@ var (
 func main() {
 
 	log.Println("loading configs.....")
-	config, err := utils.LoadEnvVaraibles(envVariableList)
+	err := config.LoadEnvVaraibles(envVariableList)
 	if err != nil {
 		log.Fatal("Error loading configs from env file", err)
 	}
 	log.Println("configs loaded successfully....")
 
-	utils.Init(config)
-	database.Init(config)
-	services.Init(config)
-	elasticsearch.Init(config)
-
 	router := gin.Default()
 	InitializeRouters(router)
-	InitializeElasticSerch(config)
+	InitializeElasticSerch()
 
-	log.Fatal(router.Run(":" + config.AppPort))
+	log.Fatal(router.Run(":" + config.GlobalConfig.AppPort))
 
 }
 
@@ -60,11 +52,12 @@ func InitializeRouters(router *gin.Engine) {
 	router.Use(gin.Recovery())
 
 	router.GET("/:url", controller.Resolve)
-	router.POST("/api/v1", controller.Shorten)
+	router.POST("/shorten", controller.Shorten)
 
 }
 
-func InitializeElasticSerch(config *model.Config) {
+func InitializeElasticSerch() {
+	config := config.GlobalConfig
 	ElasticClient, err := elasticsearch.GetElasticClient(config.UrlMetadataIndex)
 	if err != nil {
 		log.Fatal(err)

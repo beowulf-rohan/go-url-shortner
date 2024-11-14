@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"log"
-
 	"github.com/asaskevich/govalidator"
 	"github.com/beowulf-rohan/go-url-shortner/api/services"
 	"github.com/beowulf-rohan/go-url-shortner/model"
@@ -19,7 +17,7 @@ func Shorten(c *gin.Context) {
 		})
 		return
 	}
-	log.Println("shorten request receive for URL:", request.URL)
+
 	if !govalidator.IsURL(request.URL) {
 		c.JSON(400, gin.H{
 			"error": "request URL is not valid",
