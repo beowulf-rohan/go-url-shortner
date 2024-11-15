@@ -49,9 +49,23 @@ The instructions below guide you on setting up the application and using its API
     ```
 
 4. ***Resolve API***
+
+     Contract -
     ```bash
+        short_url:  mandatory, string    -> short_url that was generated using shorten api
+    ```
+
+    Endpint - 
+    ```bash
+    curl --location 'http://localhost:3000/{short_url}'
+    example:
     curl --location 'http://localhost:3000/rGu2aeQO'
     
+    ```
+
+    Response - 
+    ```bash
+    Hit the endpoint in a browser and you'll be directed to the orinal url.
     ```
 
 ---
