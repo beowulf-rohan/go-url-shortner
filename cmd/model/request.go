@@ -3,7 +3,7 @@ package model
 import "time"
 
 type Request struct {
-	URL          string        `json:"url"`
-	ShortenedURL string        `json:"shortened_url"`
-	Expiry       time.Duration `json:"expiry"`
+	URL      string        `json:"url"`
+	ShortURL string        `json:"short_url"`
+	Expiry   time.Duration `json:"expiry"`
 }
