@@ -3,28 +3,31 @@ package services
 import (
 	"log"
 
-	database "github.com/beowulf-rohan/go-url-shortner/redis"
-
-	"github.com/go-redis/redis/v8"
+	"github.com/beowulf-rohan/go-url-shortner/config"
+	"github.com/beowulf-rohan/go-url-shortner/elasticsearch"
+	"github.com/beowulf-rohan/go-url-shortner/model"
+	"github.com/beowulf-rohan/go-url-shortner/utils"
+	// database "github.com/beowulf-rohan/go-url-shortner/redis"
+	// "github.com/go-redis/redis/v8"
 )
 
-func Resolve(url string) (string, int, error) {
-	log.Println("Short URL received for resolution:", url)
+func Resolve(shortUrl string) (*model.Response, int, error) {
+	log.Println("Short URL received for resolution:", shortUrl)
 
-	redisClient := database.CreareRedisClient(0)
-	defer redisClient.Close()
-
-	value, err := redisClient.Get(database.Ctx, url).Result()
-	if err == redis.Nil {
-		return "", 404, err
-	} else if err != nil {
-		return "", 500, err
+	config := config.GlobalConfig
+	ElasticClient, err := elasticsearch.GetElasticClient(config.UrlMetadataIndex)
+	if err != nil {
+		return &model.Response{}, 500, err
 	}
 
-	rInr := database.CreareRedisClient(1)
-	defer rInr.Close()
+	query := utils.GetResolveQuery(shortUrl)
 
-	_ = rInr.Incr(database.Ctx, "counter")
+	existingDoc, err := ElasticClient.GetFromElastic(query)
+	if err != nil {
+		log.Println("Error checking existing URL:", err)
+		return &model.Response{}, 500, err
+	}
 
-	return value, 200, nil
+	log.Printf("shortURL: '%s' mapped to URL: '%s'", shortUrl, existingDoc.URL)
+	return existingDoc, 200, nil
 }

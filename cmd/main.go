@@ -50,7 +50,7 @@ func InitializeRouters(router *gin.Engine) {
 
 	router.Use(gin.Recovery())
 
-	router.GET("/:url", controller.Resolve)
+	router.GET("/:shortURL", controller.Resolve)
 	router.POST("/shorten", controller.Shorten)
 
 }

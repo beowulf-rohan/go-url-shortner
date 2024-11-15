@@ -8,16 +8,21 @@ import (
 )
 
 func Resolve(c *gin.Context) {
-	url := c.Param("url")
+	shortUrl := c.Param("shortURL")
 
-	resolvedURL, code, err := services.Resolve(url)
+	resolvedDoc, code, err := services.Resolve(shortUrl)
 	if err != nil {
 		c.JSON(code, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
-	log.Println("Resloved URL:", resolvedURL)
+	log.Println("Resloved URL:", resolvedDoc)
+	
+	if code == 200 && resolvedDoc.URL != "" {
+        c.Redirect(302, resolvedDoc.URL)
+        return
+    }
 
-	c.Redirect(code, resolvedURL)
+    c.JSON(code, resolvedDoc)
 }
