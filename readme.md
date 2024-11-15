@@ -1,7 +1,6 @@
 # URL Shortener Application
 
-This application provides a Dockerized URL Shortener service with APIs for creating and retrieving shortened URLs. 
-The instructions below guide you on setting up the application and using its APIs.
+This application provides a Dockerized URL Shortener service built using Go Lang, ElasticSearch, Redis, and the Go-Gin framework. It includes APIs for creating and retrieving shortened URLs. The instructions below guide you on setting up the application and using its APIs.
 
 ---
 
