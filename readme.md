@@ -5,8 +5,6 @@ The instructions below guide you on setting up the application and using its API
 
 ---
 
----
-
 ### Steps to Start the Application
 
 1. **Clone the repository**
@@ -21,6 +19,7 @@ The instructions below guide you on setting up the application and using its API
    ```
 
 3. ***Shorten API***
+    
     Contract -
     ```bash
         url:        mandatory, string   -> url you want to shorten
