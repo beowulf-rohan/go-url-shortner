@@ -9,8 +9,9 @@ import (
 
 func Resolve(c *gin.Context) {
 	shortUrl := c.Param("shortURL")
+	ip := c.ClientIP()
 
-	resolvedDoc, code, err := services.Resolve(shortUrl)
+	resolvedDoc, code, err := services.Resolve(shortUrl, ip)
 	if err != nil {
 		c.JSON(code, gin.H{
 			"error": err.Error(),

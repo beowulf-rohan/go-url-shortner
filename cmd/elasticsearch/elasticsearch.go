@@ -13,6 +13,7 @@ import (
 
 	"github.com/beowulf-rohan/go-url-shortner/config"
 	"github.com/beowulf-rohan/go-url-shortner/model"
+	"github.com/beowulf-rohan/go-url-shortner/utils"
 	"github.com/elastic/go-elasticsearch/esapi"
 	"github.com/elastic/go-elasticsearch/v8"
 )
@@ -232,5 +233,29 @@ func (ec *ElasticClient) GetAllFromElastic() error {
 		log.Println("No documents found.")
 	}
 
+	return nil
+}
+
+func (ec *ElasticClient) ClearExpiredDocuments() error {
+
+	currentTime := time.Now().UTC().Format("2006-01-02T15:04:05.000Z") // Elasticsearch expects time in RFC3339 format
+	query := utils.GetIndexClearingQuery(currentTime)
+	reqBody := bytes.NewBufferString(query)
+	res, err := ec.Client.DeleteByQuery(
+		[]string{ec.Index},
+		reqBody,
+		ec.Client.DeleteByQuery.WithContext(context.Background()),
+		ec.Client.DeleteByQuery.WithRefresh(true),
+	)
+	if err != nil {
+		return fmt.Errorf("error executing delete by query: %v", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return fmt.Errorf("delete by query returned error: %s", res.String())
+	}
+
+	log.Printf("Successfully deleted expired documents from index: %s", ec.Index)
 	return nil
 }

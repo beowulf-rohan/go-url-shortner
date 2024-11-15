@@ -5,7 +5,7 @@ type Config struct {
 	DbPass           string `json:"db_pass"`
 	AppPort          string `json:"app_port"`
 	Domain           string `json:"domain"`
-	ApiQuota         int    `json:"api_quota"`
+	ApiRateLimit     int    `json:"api_rate_limit"`
 	ElasticEndpoint  string `json:"elastic_endpoint"`
 	ElasticUsername  string `json:"elastic_username"`
 	ElasticPassword  string `json:"elastic_password"`

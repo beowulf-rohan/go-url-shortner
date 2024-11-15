@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 
@@ -21,7 +22,7 @@ func GetConfigFilePath() (configFilePath string) {
 	return
 }
 
-func LoadEnvVaraibles(envVariableList []string) (error) {
+func LoadEnvVaraibles(envVariableList []string) error {
 	config := model.Config{}
 	configFilePath := GetConfigFilePath()
 	err := godotenv.Load(configFilePath)
@@ -38,9 +39,9 @@ func LoadEnvVaraibles(envVariableList []string) (error) {
 			}
 		case "DB_PASS":
 			config.DbPass = os.Getenv("DB_PASS")
-			if config.DbPass == "" {
-				return fmt.Errorf("no env value found for \"DB_PASS\" in env file")
-			}
+			// if config.DbPass == "" {
+			// 	return fmt.Errorf("no env value found for \"DB_PASS\" in env file")
+			// }
 		case "APP_PORT":
 			config.AppPort = os.Getenv("APP_PORT")
 			if config.AppPort == "" {
@@ -51,11 +52,12 @@ func LoadEnvVaraibles(envVariableList []string) (error) {
 			if config.Domain == "" {
 				return fmt.Errorf("no env value found for \"DOMAIN\" in env file")
 			}
-		case "API_QUOTA":
-			apiQuota := os.Getenv("API_QUOTA")
-			if apiQuota == "" {
-				return fmt.Errorf("no env value found for \"API_QUOTA\" in env file")
-			} else if config.ApiQuota, err = strconv.Atoi(apiQuota); err != nil {
+		case "API_RATE_LIMIT":
+			apiRateLimit := os.Getenv("API_RATE_LIMIT")
+			log.Println("ratelimit", apiRateLimit)
+			if apiRateLimit == "" {
+				return fmt.Errorf("no env value found for \"API_RATE_LIMIT\" in env file")
+			} else if config.ApiRateLimit, err = strconv.Atoi(apiRateLimit); err != nil {
 				return err
 			}
 		case "ES_ENDPOINT":

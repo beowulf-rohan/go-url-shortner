@@ -55,3 +55,15 @@ func GetResolveQuery(shortUrl string) string {
 		}
 	}`, shortUrl)
 }
+
+func GetIndexClearingQuery(currentTime string) string {
+	return fmt.Sprintf(`{
+		"query": {
+			"range": {
+				"expiry": {
+					"lte": "%s"
+				}
+			}
+		}
+	}`, currentTime)
+}

@@ -16,7 +16,7 @@ var (
 		"DB_PASS",
 		"APP_PORT",
 		"DOMAIN",
-		"API_QUOTA",
+		"API_RATE_LIMIT",
 		"ES_ENDPOINT",
 		"URL_METADATA_ES_INDEX",
 	}
