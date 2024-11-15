@@ -44,7 +44,7 @@ func (client *RedisClient) PushToRedis(shortenedURLResponse *model.Response) err
 		return err
 	}
 
-	err = client.Client.Set(client.Ctx, shortenedURLResponse.ShortURL, data, 1*time.Minute).Err()
+	err = client.Client.Set(client.Ctx, shortenedURLResponse.ShortURL, data, 24*time.Hour).Err()
 	if err != nil {
 		log.Printf("Failed to push shortenedURLResponse to Redis: %v", err)
 		return err
