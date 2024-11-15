@@ -18,8 +18,6 @@ var (
 		"DOMAIN",
 		"API_QUOTA",
 		"ES_ENDPOINT",
-		// "ES_USERNAME",
-		// "ES_PASSWORD",
 		"URL_METADATA_ES_INDEX",
 	}
 )
