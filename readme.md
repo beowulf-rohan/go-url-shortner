@@ -23,9 +23,9 @@ It includes APIs for creating and retrieving shortened URLs. The instructions be
     
     Contract -
     ```bash
-        url:        mandatory, string   -> url you want to shorten
-        short_url:  optional, string    -> short_url is optional, provide a custom short_url if needed
-        expiry:     optional, integer   -> short url expiration in days
+    url:        mandatory, string   -> url you want to shorten
+    short_url:  optional, string    -> short_url is optional, provide a custom short_url if needed
+    expiry:     optional, integer   -> short url expiration in days
     ```
     
     Endpoint - 
@@ -53,7 +53,7 @@ It includes APIs for creating and retrieving shortened URLs. The instructions be
 
      Contract -
     ```bash
-        short_url:  mandatory, string    -> short_url that was generated using shorten api
+    short_url:  mandatory, string    -> short_url that was generated using shorten api
     ```
 
     Endpint - 
