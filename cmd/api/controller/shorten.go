@@ -1,11 +1,9 @@
 package controller
 
 import (
-	"log"
-
 	"github.com/asaskevich/govalidator"
+	"github.com/beowulf-rohan/go-url-shortner/api/services"
 	"github.com/beowulf-rohan/go-url-shortner/model"
-	"github.com/beowulf-rohan/go-url-shortner/services"
 	"github.com/beowulf-rohan/go-url-shortner/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -19,7 +17,7 @@ func Shorten(c *gin.Context) {
 		})
 		return
 	}
-	log.Println("shorten request receive for URL:", request.URL)
+
 	if !govalidator.IsURL(request.URL) {
 		c.JSON(400, gin.H{
 			"error": "request URL is not valid",
@@ -36,7 +34,7 @@ func Shorten(c *gin.Context) {
 
 	request.URL = utils.EnforceHttp(request.URL)
 
-	serviceResponse, err, code := services.Shorten(request, c.ClientIP())
+	shortenedURLResponse, code, err := services.Shorten(&request, c.ClientIP())
 	if err != nil {
 		c.JSON(code, gin.H{
 			"error": err.Error(),
@@ -44,5 +42,5 @@ func Shorten(c *gin.Context) {
 		return
 	}
 
-	c.JSON(code, serviceResponse)
+	c.JSON(code, shortenedURLResponse)
 }
