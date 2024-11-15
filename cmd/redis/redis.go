@@ -11,8 +11,6 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-var Ctx = context.Background()
-
 const (
 	URL_METADATA_DB = 0
 	IP_DB           = 1
