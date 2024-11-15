@@ -78,6 +78,13 @@ func LoadEnvVaraibles(envVariableList []string) error {
 			if config.UrlMetadataIndex == "" {
 				return fmt.Errorf("no env value found for \"URL_METADATA_ES_INDEX\" in env file")
 			}
+		case "INDEX_CLEAR_INTERVAL":
+			indexClearInterval := os.Getenv("INDEX_CLEAR_INTERVAL")
+			if indexClearInterval == "" {
+				return fmt.Errorf("no env value found for \"INDEX_CLEAR_INTERVAL\" in env file")
+			} else if config.IndexClearInterval, err = strconv.Atoi(indexClearInterval); err != nil {
+				return err
+			}
 		}
 	}
 	GlobalConfig = config
