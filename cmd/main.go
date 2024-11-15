@@ -48,7 +48,6 @@ func InitializeRouters(router *gin.Engine) {
 		AllowHeaders: []string{"Origin", "Content-Type", "Accept"},
 	}))
 
-	// router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
 	router.GET("/:url", controller.Resolve)

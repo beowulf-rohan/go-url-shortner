@@ -9,7 +9,6 @@ import (
 
 func Resolve(c *gin.Context) {
 	url := c.Param("url")
-	log.Println("URL received for resolution:", url)
 
 	resolvedURL, code, err := services.Resolve(url)
 	if err != nil {

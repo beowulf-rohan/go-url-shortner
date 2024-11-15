@@ -1,12 +1,16 @@
 package services
 
 import (
+	"log"
+
 	database "github.com/beowulf-rohan/go-url-shortner/redis"
 
 	"github.com/go-redis/redis/v8"
 )
 
 func Resolve(url string) (string, int, error) {
+	log.Println("Short URL received for resolution:", url)
+
 	redisClient := database.CreareRedisClient(0)
 	defer redisClient.Close()
 

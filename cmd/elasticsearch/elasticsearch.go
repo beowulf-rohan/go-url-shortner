@@ -152,14 +152,7 @@ func (ec *ElasticClient) PushToElastic(doc interface{}, docID string) error {
 	return nil
 }
 
-func (ec *ElasticClient) GetFromElastic(docID string) (*model.Response, error) {
-	query := fmt.Sprintf(`{
-		"query": {
-			"term": {
-				"url.keyword": "%s"
-			}
-		}
-	}`, docID)
+func (ec *ElasticClient) GetFromElastic(query string) (*model.Response, error) {
 
 	res, err := ec.Client.Search(
 		ec.Client.Search.WithIndex(ec.Index),
@@ -192,7 +185,7 @@ func (ec *ElasticClient) GetFromElastic(docID string) (*model.Response, error) {
 	}
 
 	if len(searchResult.Hits.Hits) == 0 {
-		return nil, fmt.Errorf("document with URL '%s' not found in index '%s'", docID, ec.Index)
+		return nil, fmt.Errorf("document not found in index '%s'", ec.Index)
 	}
 
 	return &searchResult.Hits.Hits[0].Source, nil
