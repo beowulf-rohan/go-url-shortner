@@ -54,7 +54,6 @@ func LoadEnvVaraibles(envVariableList []string) error {
 			}
 		case "API_RATE_LIMIT":
 			apiRateLimit := os.Getenv("API_RATE_LIMIT")
-			log.Println("ratelimit", apiRateLimit)
 			if apiRateLimit == "" {
 				return fmt.Errorf("no env value found for \"API_RATE_LIMIT\" in env file")
 			} else if config.ApiRateLimit, err = strconv.Atoi(apiRateLimit); err != nil {
