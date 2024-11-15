@@ -21,17 +21,36 @@ The instructions below guide you on setting up the application and using its API
    ```
 
 3. ***Shorten API***
+    Contract -
+    ```bash
+        url:        mandatory, string   -> url you want to shorten
+        short_url:  optional, string    -> short_url is optional, provide a custom short_url if needed
+        expiry:     optional, integer   -> short url expiration in days
+    ```
+    
+    Endpoint - 
     ```bash
     curl --location 'http://localhost:3000/shorten' \
         --header 'Content-Type: application/json' \
         --data '{
-            "url": "www.facebook.com",
-            "shortened_url": "",
+            "url": "www.google.com",
+            "short_url": "",
             "expiry": 12
         }'
     ```
 
+    Response - 
+    ```bash
+    {
+        "url": "https://www.google.com",
+        "short_url": "rGu2aeQO",
+        "created_at": "2024-11-15T20:08:48.361070715Z",
+        "expiry": "2024-11-27T20:08:48.361070756Z"
+    }
+    ```
+
 4. ***Resolve API***
     ```bash
-    curl --location 'http://localhost:3000/{shortURL}'
+    curl --location 'http://localhost:3000/rGu2aeQO'
+    
     ```

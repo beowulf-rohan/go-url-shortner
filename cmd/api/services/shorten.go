@@ -20,8 +20,8 @@ func Shorten(request *model.Request, ip string) (*model.Response, int, error) {
 		return &model.Response{}, 500, err
 	}
 
-	if request.ShortenedURL == "" {
-		request.ShortenedURL = utils.GenerateShortUrl(request.URL)
+	if request.ShortURL == "" {
+		request.ShortURL = utils.GenerateShortUrl(request.URL)
 	}
 	if request.Expiry == 0 {
 		request.Expiry = 24
@@ -40,7 +40,8 @@ func Shorten(request *model.Request, ip string) (*model.Response, int, error) {
 
 	shortenedURLResponse := model.Response{
 		URL:      request.URL,
-		ShortURL: request.ShortenedURL,
+		ShortURL: request.ShortURL,
+		CreatedAt: time.Now(),
 		Expiry:   time.Now().Add(request.Expiry * 24 * time.Hour),
 	}
 
