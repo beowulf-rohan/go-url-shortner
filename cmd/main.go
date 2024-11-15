@@ -5,6 +5,7 @@ import (
 
 	"github.com/beowulf-rohan/go-url-shortner/api/controller"
 	"github.com/beowulf-rohan/go-url-shortner/config"
+	"github.com/beowulf-rohan/go-url-shortner/cronjob"
 	"github.com/beowulf-rohan/go-url-shortner/elasticsearch"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -34,6 +35,8 @@ func main() {
 	router := gin.Default()
 	InitializeRouters(router)
 	InitializeElasticSerch()
+	
+	go cronjob.RunElasticClearUp()
 
 	log.Fatal(router.Run(":" + config.GlobalConfig.AppPort))
 
