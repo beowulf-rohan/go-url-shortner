@@ -53,3 +53,6 @@ The instructions below guide you on setting up the application and using its API
     curl --location 'http://localhost:3000/rGu2aeQO'
     
     ```
+
+---
+
